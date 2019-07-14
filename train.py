@@ -26,12 +26,13 @@ from pytorch_pretrained_bert import (
     OpenAIGPTDoubleHeadsModel,
     OpenAIGPTTokenizer,
     GPT2DoubleHeadsModel,
-    GPT2Tokenizer,
     WEIGHTS_NAME,
     CONFIG_NAME,
 )
 
 from data import get_dataset
+#so we can trace in debugger
+from tokenization_gpt2 import GPT2Tokenizer
 
 SPECIAL_TOKENS = [
     "<bos>",
@@ -344,7 +345,8 @@ def train():
     )
     model = model_class.from_pretrained(args.model_checkpoint)
     tokenizer.set_special_tokens(SPECIAL_TOKENS)
-    model.set_num_special_tokens(len(SPECIAL_TOKENS))
+    #throws error: AttributeError: 'GPT2DoubleHeadsModel' object has no attribute 'set_num_special_tokens'
+    #model.set_num_special_tokens(len(SPECIAL_TOKENS))
     model.to(args.device)
     optimizer = OpenAIAdam(model.parameters(), lr=args.lr)
 
