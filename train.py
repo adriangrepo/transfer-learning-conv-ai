@@ -3,6 +3,7 @@
 import os
 import math
 import logging
+import argparse
 from pprint import pformat
 from argparse import ArgumentParser
 from collections import defaultdict
@@ -44,6 +45,10 @@ MODEL_INPUTS = ["input_ids", "mc_token_ids", "lm_labels", "mc_labels", "token_ty
 PADDED_INPUTS = ["input_ids", "lm_labels", "token_type_ids"]
 
 logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('train.log')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
 
 
 def average_distributed_scalar(scalar, args):
@@ -224,7 +229,7 @@ def get_data_loaders(args, tokenizer):
     return train_loader, valid_loader, train_sampler, valid_sampler
 
 
-def train():
+def get_args():
     parser = ArgumentParser()
     parser.add_argument(
         "--dataset_path",
@@ -312,7 +317,9 @@ def train():
         help="Max length size",
     )
     args = parser.parse_args()
+    return args
 
+def train(args):
     # logging is set to INFO (resp. WARN) for main (resp. auxiliary) process. logger.info => log main process only, logger.warning => log all processes
     logging.basicConfig(
         level=logging.INFO if args.local_rank in [-1, 0] else logging.WARN
@@ -344,7 +351,7 @@ def train():
     )
     model = model_class.from_pretrained(args.model_checkpoint)
     tokenizer.set_special_tokens(SPECIAL_TOKENS)
-    model.set_num_special_tokens(len(SPECIAL_TOKENS))
+    #model.set_num_special_tokens(len(SPECIAL_TOKENS))
     model.to(args.device)
     optimizer = OpenAIAdam(model.parameters(), lr=args.lr)
 
@@ -519,4 +526,13 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    #args=get_args()
+    #or use line below for debugging
+    args = argparse.Namespace(
+        dataset_path='./data', device='cuda', eval_before_start=False, fp16='O2', gradient_accumulation_steps=32,
+        lm_coef=1.0, local_rank=-1, lr=6.25e-05, max_history=4, max_norm=1.0, max_seq_len=None, mc_coef=1.0,
+        model_checkpoint='gpt2', n_epochs=3, num_candidates=2, personality_permutations=1, subreddit=[],
+        train_batch_size=1, valid_batch_size=1)
+    print(args)
+    train(args)
+

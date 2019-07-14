@@ -14,6 +14,7 @@ from pathlib import Path
 logger = logging.getLogger(__file__)
 
 
+
 def format_reddit_thing(thing, submission_id):
     if thing["type"] == "submission":
         return "\n".join(
@@ -42,12 +43,12 @@ def thread2tree(comment_dict, submission):
         next_comment = comment_dict[current_id].pop()
         queue.append(next_comment)
 
-    # convert thread to persona type file. Where persona is submision
+
+    # convert thread to persona type file. Where persona is submision dict
     submission_id = get_id_for_comments(submission)
 
     # tree from comments dict
     tree_root = Node(submission_id)
-    submission_id = get_id_for_comments(submission)
     nodes_by_id = {submission_id: tree_root}
     thing_by_id = {submission_id: submission}
     for thing in queue[1:]:
@@ -72,6 +73,7 @@ def get_dataset(tokenizer, data_path, num_candidates = 3, subreddits=[], max_seq
                 - history: list[str]
     
     """
+    print('>>get_dataset()')
     data_dir = Path(data_path)
     subreddit_paths = [d for d in data_dir.glob("*/") if d.is_dir()]
 
@@ -99,6 +101,7 @@ def get_dataset(tokenizer, data_path, num_candidates = 3, subreddits=[], max_seq
                 print(f'subreddit not in filter /r/{subreddit}')
     
     num_train_examples = len(list(itertools.chain(*list(splits["train"].values()))))
+    print(f'num_train_examples: {num_train_examples}')
     if len(splits["train"])==0 or num_train_examples< 10:
         raise Exception("not enougth training data found. Check your dataset_path and your --subreddits argument")
 
@@ -107,10 +110,12 @@ def get_dataset(tokenizer, data_path, num_candidates = 3, subreddits=[], max_seq
     for split, personalities in splits.items():
         total = len(list(itertools.chain(*personalities.values())))
         with tqdm(total=total, desc=f"{split}", unit="file") as prog:
+            #key is reddit subthread name, values are pickle files in the folder
             for personality, files in personalities.items():
                 utterances = []
                 for file in files:
-                    # load
+                    #load, eg thread format: {submission: {author: aname, ... score: 42, selftext:
+                    # main text body is here}, comment_dict: {[]}}
                     thread = pickle.load(file.open("rb"))
                     prog.update(1)
                     try:
@@ -193,8 +198,7 @@ def get_dataset(tokenizer, data_path, num_candidates = 3, subreddits=[], max_seq
     def tokenize(obj):
         if isinstance(obj, str):
             return tokenizer.convert_tokens_to_ids(
-                tokenizer.tokenize(obj)[:max_seq_len]
-            )
+                        tokenizer.tokenize(obj)[:max_seq_len])
         if isinstance(obj, dict):
             return dict((n, tokenize(o)) for n, o in obj.items())
         return list(tokenize(o) for o in obj)

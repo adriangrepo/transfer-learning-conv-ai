@@ -1,4 +1,7 @@
-torch>1.0.0
+#torch>1.0.0
+#or for pytorch with cuda 10 drivers, python 3.7:
+#pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-linux_x86_64.whl
+
 # Until 0.6.3 is out we can use this pip install from the github repo
 git+https://github.com/huggingface/pytorch-pretrained-BERT.git@78462aad6113d50063d8251e27dbaadb7f44fbf0
 # OR later pytorch-pretrained-bert>0.6.2
@@ -17,3 +20,7 @@ pandas
 psaw
 coloredlogs
 ipdb
+#if apex not installed
+#git clone https://github.com/NVIDIA/apex
+#cd apex
+#pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
